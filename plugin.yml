@@ -1,0 +1,10 @@
+name: Checkers
+main: com.github.lyokofirelyte.Checkers.CMain
+author: lyokofirelyte
+prefix: C
+version: 1
+
+commands:
+   checkers:
+      description: Checkers Command
+      usage: /checkers
