@@ -5,6 +5,9 @@ import com.github.lyokofirelyte.Checkers.Internal.CPlayer;
 import com.github.lyokofirelyte.Checkers.Internal.CSystem;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -19,7 +22,7 @@ public class CGameEvent implements Listener {
 	
 
 	CMain pl;
-	String blockList = ":0: :9: :18: :27: :36: :45: :54: :63:";
+	String blockList = ":0: :9: :18: :27: :36: :45: :54: :63:"; // DANGER ZONE!@#$^!
 	List<String> lore = new ArrayList<>();
  
 	public CGameEvent(CMain instance) {
@@ -88,24 +91,65 @@ public class CGameEvent implements Listener {
 		        return;
        		}
        		
-       		if ((e.getCurrentItem() == null) || (e.getCurrentItem().getType() == Material.AIR)){
+       		if ((e.getCurrentItem() == null) || (e.getCurrentItem().getType() == Material.AIR)){ // Are you moving to a free space?
        			
-       			if ((e.getSlot() == player.getSelPiece() + 16) || (e.getSlot() == player.getSelPiece() - 16) || 
-       				(e.getSlot() == player.getSelPiece() + 20) || (e.getSlot() == player.getSelPiece() - 20)){
-       				
-	       			if ((e.getSlot() == player.getSelPiece() + 16) || (e.getSlot() == player.getSelPiece() + 20)){
+       			if ((e.getSlot() == player.getSelPiece() + 16) || (e.getSlot() == player.getSelPiece() - 16) || // ALL VALID MOVES, SPEEDS UP CHECKING
+       				(e.getSlot() == player.getSelPiece() + 20) || (e.getSlot() == player.getSelPiece() - 20) || // IF YOU DIDN'T CHOOSE A VALID ONE
+       				(e.getSlot() == player.getSelPiece() + 10) || (e.getSlot() == player.getSelPiece() - 10) ||
+       				(e.getSlot() == player.getSelPiece() + 8)  || (e.getSlot() == player.getSelPiece() - 8)){
+       				// Redundant but necessary checks
+	       			if ((e.getSlot() == player.getSelPiece() + 16) || (e.getSlot() == player.getSelPiece() + 20)){ // Did you try a king jump?
 	       				
-	       				if (!player.getSelPieceItem().getItemMeta().hasLore()) {
+	       				if (!player.getSelPieceItem().getItemMeta().hasLore()) { // Are you a king?
 	       					return;
 	       				}
 	       			}
-       			
-	       			move(e, player, p);
+	       			
+	       			if (e.getSlot() == player.getSelPiece() + 16){ // Did you try a king jump?
+       					
+       					if (e.getInventory().getItem(player.getSelPiece() + 8) != null && // Is the middle space empty?
+       						e.getInventory().getItem(player.getSelPiece() + 8).getItemMeta().getDisplayName().contains("AI")){ // Is it an AI piece?
+       						e.getInventory().getItem(player.getSelPiece() + 8).setType(Material.AIR); // Remove from board
+       					} else {
+       						return; // abort!
+       					}
+	       			}
+       					
+    	       		if (e.getSlot() == player.getSelPiece() + 20){ // Did you try a king jump?
+           				
+    	       			if (e.getInventory().getItem(player.getSelPiece() + 10) != null && // Is the middle space empty?
+           					e.getInventory().getItem(player.getSelPiece() + 10).getItemMeta().getDisplayName().contains("AI")){ // Is it an AI piece?
+           					e.getInventory().getItem(player.getSelPiece() + 10).setType(Material.AIR); // Remove from board
+           				} else {
+           					return;
+           				}
+    	       		}
+    	       		
+	       			if (e.getSlot() == player.getSelPiece() - 16){ // Did you try a normal jump..?
+       					
+       					if (e.getInventory().getItem(player.getSelPiece() - 8) != null && // Is the middle space empty?
+       						e.getInventory().getItem(player.getSelPiece() - 8).getItemMeta().getDisplayName().contains("AI")){ // Is it an AI piece?
+       						e.getInventory().getItem(player.getSelPiece() - 8).setType(Material.AIR); // Remove from board
+       					} else {
+       						return; // abort!
+       					}
+	       			}
+       					
+    	       		if (e.getSlot() == player.getSelPiece() - 20){ // Did you try a normal jump?
+           				
+    	       			if (e.getInventory().getItem(player.getSelPiece() - 10) != null && // Is the middle space empty?
+           					e.getInventory().getItem(player.getSelPiece() - 10).getItemMeta().getDisplayName().contains("AI")){ // Is it an AI piece?
+           					e.getInventory().getItem(player.getSelPiece() - 10).setType(Material.AIR); // Remove from board
+           				} else {
+           					return;
+           				}
+    	       		}
+    	       		
+	       			move(e, player, p); // Move your piece.
        			}
        		}
        	}
-     }
-
+	}
  
    public void move(InventoryClickEvent e, CPlayer player, Player p){
 	   
@@ -114,12 +158,114 @@ public class CGameEvent implements Listener {
 	   player.setSelPiece(0);
 	   player.setTurn(false);
      
-	   if ((e.getSlot() > 0) && (e.getSlot() <= 8)) {
+	   if ((e.getSlot() > 0) && (e.getSlot() <= 8)) { // If it's a king we will make it glow. #whynot
 		   e.getCurrentItem().getItemMeta().setLore(lore);
 		   e.getCurrentItem().addEnchantment(Enchantment.DURABILITY, 10);
 	   }
      
-	   pl.manager.updateCPlayer(p.getName(), player);
+	   pl.manager.updateCPlayer(p.getName(), player); // save changes to hashmap
+	   
+	   Bukkit.broadcastMessage("Ai start");
+	   aiMove(e, player); // THE AI BEGINS! MUWHAH! >.>
+   }
+   
+   private void aiMove(InventoryClickEvent e, CPlayer player){ // no other class should make the AI move...
+	   
+	   Random rand = new Random();
+	   int selection = rand.nextInt((e.getInventory().getSize()) - 1);
+	   int x = -1;
+
+	   for (ItemStack i : e.getInventory()){
+		   
+		   x++;
+	   
+	  		if (i != null && i.hasItemMeta() && i.getItemMeta().getDisplayName().contains("AI")){ // Are you moving to a free space?
+	  			
+	  			if (e.getInventory().getItem(selection).getType() != Material.AIR){
+	  				aiMove(e, player);
+	  				return;
+	  			}
+	   			
+	   			if ((selection == x + 16) || (selection == x - 16) || // ALL VALID MOVES, SPEEDS UP CHECKING
+	   				(selection == x + 20) || (selection == x - 20) || // IF YOU DIDN'T CHOOSE A VALID ONE
+	   				(selection == x + 10) || (selection == x - 10) ||
+	   				(selection == x + 8)  || (selection == x - 8)){
+	   				// Redundant but necessary checks
+	   				Bukkit.broadcastMessage("valid ai move");
+	       			if ((selection == x - 16) || (selection == x - 20)){ // Did you try a king jump?
+	       				
+	       				if (!e.getInventory().getItem(x).getItemMeta().hasLore()) { // Are you a king?
+	       					aiMove(e, player);
+	       					return;
+	       				}
+	       			}
+	       			
+	       			if (blockList.contains(":" + selection + ":")){
+	       				aiMove(e, player);
+	       				Bukkit.broadcastMessage("block list");
+	       				return;
+	       			}
+	       			
+	       			if (selection == x - 16){ // Did you try a king jump?
+	   					
+	   					if (e.getInventory().getItem(x - 8) != null && // Is the middle space empty?
+	   						e.getInventory().getItem(x - 8).getItemMeta().getDisplayName().contains("Your")){ 
+	   						e.getInventory().getItem(x - 8).setType(Material.AIR); // Remove from board
+	   						Bukkit.broadcastMessage("s");
+	   					} else {
+	   						aiMove(e, player);
+	   						return; 
+	   					}
+	       			}
+	   					
+		       		if (selection == x - 20){ // Did you try a king jump?
+	       				
+		       			if (e.getInventory().getItem(x - 10) != null && // Is the middle space empty?
+	       					e.getInventory().getItem(x - 10).getItemMeta().getDisplayName().contains("Your")){ 
+	       					e.getInventory().getItem(x - 10).setType(Material.AIR); // Remove from board
+	       					Bukkit.broadcastMessage("s");
+	       				} else {
+	       					aiMove(e, player);
+	       					return;
+	       				}
+		       		}
+		       		
+	       			if (selection == x + 16){ // Did you try a normal jump..?
+	   					
+	   					if (e.getInventory().getItem(x + 8) != null && // Is the middle space empty?
+	   						e.getInventory().getItem(x + 8).getItemMeta().getDisplayName().contains("Your")){
+	   						e.getInventory().getItem(x + 8).setType(Material.AIR); // Remove from board
+	   						Bukkit.broadcastMessage("s");
+	   					} else {
+	   						aiMove(e, player);
+	   						return; 
+	   					}
+	       			}
+	   					
+		       		if (selection == x + 20){ // Did you try a normal jump?
+	       				
+		       			if (e.getInventory().getItem(x + 10) != null && // Is the middle space empty?
+	       					e.getInventory().getItem(x + 10).getItemMeta().getDisplayName().contains("Your")){ 
+	       					e.getInventory().getItem(x + 10).setType(Material.AIR); // Remove from board
+	       					Bukkit.broadcastMessage("s");
+	       				} else {
+	       					aiMove(e, player);
+	       					return;
+	       				}
+		       		}
+		       		
+		       		e.getInventory().setItem(selection, i);
+		       		e.getInventory().setItem(x, new ItemStack(Material.AIR, 1));
+		       		player.setTurn(true);
+		       		pl.manager.updateCPlayer(e.getWhoClicked().getName(), player);
+		       		Bukkit.broadcastMessage("X was " + x + ", selection was " + selection);
+		       		return;
+	   			}
+	   			
+	   			aiMove(e, player);
+	   			return;
+	   		}
+	   }
    }
  
    public void start(Player p){
@@ -139,11 +285,11 @@ public class CGameEvent implements Listener {
 	
 	   if (pl.manager.getCSystem(p.getName()) == null) {
 	       pl.manager.cSystems.put(p.getName(), new CSystem(p.getName()));
-	       p.openInventory(pl.manager.cInvs.get("default"));
+	       p.openInventory(pl.manager.cInvs.get("default")); // make new game
 	       return;
 	   }
  
-       p.openInventory(pl.manager.cInvs.get(p.getName()));
+       p.openInventory(pl.manager.cInvs.get(p.getName())); // resume saved game
    }
  
    public void stats(Player p){
