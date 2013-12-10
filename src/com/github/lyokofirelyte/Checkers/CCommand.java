@@ -41,6 +41,7 @@ public class CCommand implements CommandExecutor {
 		inv = Bukkit.createInventory(null, 9, "§aCheckers Main Menu");
 		inv.addItem(pl.utils.makeItem("§bStart Game", "§3New Game", true, Enchantment.DURABILITY, 10, 0, Material.DIAMOND, 1));
 		inv.addItem(pl.utils.makeItem("§eYour Stats", "§6View Stats", false, Enchantment.DURABILITY, 10, 0, Material.EMERALD, 1));
+		inv.addItem(pl.utils.makeItem("§eReset Game", "§3RESET", false, Enchantment.DURABILITY, 10, 0, Material.TNT, 1));
 		inv.addItem(pl.utils.makeItem("§4Close", "§cClose Window", false, Enchantment.DURABILITY, 10, 0, Material.REDSTONE, 1));
 		pl.manager.cInvs.put("menu", inv);
 		defaultInv();
@@ -61,8 +62,6 @@ public class CCommand implements CommandExecutor {
 	     }
 		       
 		 inv2.setItem(0, pl.utils.quickItem("§4Exit", 0));
-		 inv2.setItem(54, pl.utils.quickItem("§3AI Steals", 7));
-		 inv2.setItem(63, pl.utils.quickItem("§3Your Steals", 8));
 		 pl.manager.cInvs.put("default", inv2);
 	}
 }

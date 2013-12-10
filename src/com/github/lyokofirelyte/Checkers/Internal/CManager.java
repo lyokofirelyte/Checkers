@@ -26,7 +26,7 @@
  
 	public CSystem getCSystem(String name){
 		
-	  if (cPlayers.containsKey(name)) {
+	  if (cSystems.containsKey(name)) {
 		 return (CSystem)cSystems.get(name);
 	  }
 	  return null;

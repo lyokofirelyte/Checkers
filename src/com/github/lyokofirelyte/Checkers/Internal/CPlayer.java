@@ -13,9 +13,14 @@
 	private int wins = 0;
 	private int losses = 0;
 	String name;
+	Boolean rawr = false;
  
 	public CPlayer(String name){
 	  this.name = name;
+	}
+	
+	public Boolean getRawr(){
+		return rawr;
 	}
  
 	public ItemStack getSelPieceItem(){
@@ -50,6 +55,10 @@
 	  return turn;
 	}
  
+	public void setRawr(Boolean a){
+		rawr = a;
+	}
+	
 	public void setSelPieceItem(ItemStack a){
 	  selPieceItem = a;
 	}
@@ -63,7 +72,7 @@
 	}
  
 	public void setWins(int a){
-	  score = a;
+	  wins = a;
 	}
  
 	public void setLosses(int a){
